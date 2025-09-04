@@ -1,0 +1,151 @@
+Objetivo
+
+Implementar una API en Python (FastAPI) que reciba un JSON con pedidos, los valide, procese y devuelva un resumen con métricas y resultados por pedido.
+
+Reglas y funcionalidad
+
+Implementa los siguientes endpoints:
+
+1) POST /orders/ingest
+
+Entrada (JSON):
+
+{
+  "orders": [
+    {
+      "id": "o1",
+      "customer_id": 123,
+      "created_at": "2025-08-20T10:00:00Z",
+      "currency": "EUR",
+      "items": [
+        { "sku": "A", "quantity": 2, "unit_price": 10.0 }
+      ]
+    }
+  ]
+}
+
+
+Validaciones mínimas:
+
+id (string no vacío), customer_id (int), created_at (ISO 8601), currency en {EUR,USD,GBP}.
+
+items: lista no vacía con objetos {sku (string), quantity (int>0), unit_price (float>0)}.
+
+Si algún quantity ≤ 0 o unit_price ≤ 0 → el pedido se marca como inválido con flag NEGATIVE_VALUE.
+
+Reglas de negocio:
+
+Deduplicación por id: si hay múltiples pedidos con el mismo id, conserva solo el más reciente según created_at. Los demás cuentan como descartados por duplicado.
+
+Conversión de divisa a EUR con tasas fijas:
+
+EUR→EUR=1.0, USD→EUR=0.90, GBP→EUR=1.15.
+
+Total del pedido = Σ(quantity * unit_price) convertido a EUR (redondeo a 2 decimales).
+
+Los pedidos inválidos no se incluyen en métricas de ingresos ni en el promedio de ticket.
+
+Salida (JSON):
+
+{
+  "processed_orders": [
+    { "id": "o1", "total_eur": 20.0, "flags": [] }
+  ],
+  "summary": {
+    "orders_received": 3,
+    "orders_valid": 2,
+    "orders_invalid": 1,
+    "duplicates_dropped": 1,
+    "total_revenue_eur": 62.3,
+    "avg_ticket_eur": 31.15,
+    "top_skus_by_quantity": [
+      {"sku":"C","quantity":3},
+      {"sku":"A","quantity":2},
+      {"sku":"B","quantity":1}
+    ]
+  },
+  "duplicates": ["o2"]
+}
+
+
+top_skus_by_quantity: máximo 5 SKUs, ordenados por cantidad total vendida (solo pedidos válidos).
+
+Redondear importes a 2 decimales.
+
+2) GET /healthz
+
+Responde {"status":"ok"} (para verificación rápida).
+
+Requisitos técnicos
+
+FastAPI + Pydantic (tipado y validaciones).
+
+Manejo correcto de códigos HTTP (422 para errores de validación).
+
+Logging básico (inicio/fin de procesamiento y conteos).
+
+Pruebas con pytest y fastapi.testclient.
+
+Estructura limpia del proyecto.
+
+Datos de ejemplo (para pruebas manuales)
+{
+  "orders": [
+    {
+      "id": "o1",
+      "customer_id": 1,
+      "created_at": "2025-08-20T10:00:00Z",
+      "currency": "EUR",
+      "items": [
+        {"sku":"A","quantity":2,"unit_price":10.0}
+      ]
+    },
+    {
+      "id": "o2",
+      "customer_id": 2,
+      "created_at": "2025-08-20T11:00:00Z",
+      "currency": "USD",
+      "items": [
+        {"sku":"B","quantity":1,"unit_price":30.0},
+        {"sku":"C","quantity":3,"unit_price":5.0}
+      ]
+    },
+    {
+      "id": "o2",
+      "customer_id": 2,
+      "created_at": "2025-08-20T12:00:00Z",
+      "currency": "USD",
+      "items": [
+        {"sku":"B","quantity":1,"unit_price":32.0},
+        {"sku":"C","quantity":3,"unit_price":5.0}
+      ]
+    },
+    {
+      "id": "o3",
+      "customer_id": 3,
+      "created_at": "2025-08-20T09:00:00Z",
+      "currency": "GBP",
+      "items": [
+        {"sku":"D","quantity":-1,"unit_price":100.0}
+      ]
+    }
+  ]
+}
+
+Entregables
+
+Código fuente en Python con FastAPI y Pydantic.
+
+Instrucciones de ejecución (README) con:
+
+Cómo instalar dependencias.
+
+Cómo levantar el servidor (uvicorn).
+
+Ejemplos de curl o import de colección.
+
+Pruebas automatizadas (pytest) que cubran:
+
+GET /healthz.
+
+POST /orders/ingest: caso feliz, moneda distinta de EUR, duplicados, pedido inválido.

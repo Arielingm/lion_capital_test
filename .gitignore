@@ -1,0 +1,4 @@
+env/
+ambiente/
+data/
+**/__pycache__
