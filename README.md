@@ -18,7 +18,10 @@ Usando shell script
 ```bash
 bash shells/main.sh
 ```
-
+## Pruebas automatizadas
+```bash
+bash shells/run_tests.sh
+```
 ## Endpoints disponibles
 
 ### GET /healthz
@@ -29,8 +32,9 @@ Prueba rápida del servidor para verificar que está funcionando.
 curl http://localhost:8000/healthz
 ```
 Respuesta esperada:
-**`{"status":"ok"}`**
-
+```bash
+{"status":"ok"}
+```
 ### POST /orders/ingest
 Envía un JSON con pedidos:
 **Ejemplo de uso con `curl`:**
@@ -62,7 +66,7 @@ curl -X POST "http://localhost:8000/orders/ingest" \
 }'
 ```
 Respuesta esperada:
-
+```bash
 {
     "processed_orders": [
         {
@@ -100,5 +104,5 @@ Respuesta esperada:
     },
     "duplicates": []
 }
-
+```
 

@@ -10,11 +10,13 @@ def process_orders(orders: List[Order]) -> OrdersResponse:
     # Deduplicar por id (mantener más reciente)
     unique_orders = {}
     for order in orders:
+        if order.id in unique_orders:
+            # El que está en unique_orders es más antiguo → es duplicado
+            duplicates.append(unique_orders[order.id].id)
+        # Mantener siempre el más reciente
         if order.id not in unique_orders or order.created_at > unique_orders[order.id].created_at:
             unique_orders[order.id] = order
-    duplicates_dropped = orders_received - len(unique_orders)
-    duplicates = [o.id for o in orders if o.id not in unique_orders]
-
+    duplicates_dropped = len(duplicates)
     total_revenue = 0
     valid_orders = 0
     sku_counter: Dict[str, int] = {}
