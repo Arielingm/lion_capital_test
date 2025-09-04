@@ -6,8 +6,8 @@
 python3 -m venv ambiente
 ```
 ```bash
-source venv/bin/activate  # Linux / Mac
-venv\Scripts\activate     # Windows
+source ambiente/bin/activate  # Linux / Mac
+ambiente\Scripts\activate     # Windows
 ```
 ### Instalar dependencias
 ```bash
